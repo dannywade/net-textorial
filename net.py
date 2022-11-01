@@ -33,22 +33,28 @@ class NetApp(App):
             self.get_device_info(message.value)
 
     def get_device_info(self, items) -> None:
-        things = items.split(' ')
-        driver = get_network_driver('eos')
+        things = items.split(" ")
+        driver = get_network_driver("eos")
         with driver(things[0], "admin", "admin") as device:
             if things[1] == "config":
-                stuff = device.get_config()['running']
+                stuff = device.get_config()["running"]
+
             elif things[1] == "facts":
                 stuff = json.dumps(device.get_facts(), indent=2)
+
+            elif things[1] == "diff":
+                device.load_merge_candidate(filename=f"configs/{things[0]}.cfg")
+                stuff = device.compare_config()
+
             elif things[1] == "interfaces":
                 stuff = json.dumps(device.get_interfaces(), indent=2)
+
             elif things[1] == "cli":
                 command = device.cli([" ".join(things[2:])])
                 stuff = command[f"{' '.join(things[2:])}"]
+
         syntax = Syntax(stuff, "teratermmacro", theme="nord", line_numbers=True)
         self.query_one("#results", Static).update(syntax)
-
-
 
 
 if __name__ == "__main__":
