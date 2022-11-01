@@ -29,7 +29,7 @@ class NetApp(App):
     def on_input_submitted(self, message: Input.Submitted) -> None:
         """Runs when user hits enter"""
         if message.value:
-            # Look up the word in the background
+            # Get device stuff
             self.get_device_info(message.value)
 
     def get_device_info(self, items) -> None:
