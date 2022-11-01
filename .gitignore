@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# clab stuff
+clab-simple
+.clab.yml.bak
+
+.ssh/
+
 # C extensions
 *.so
 
