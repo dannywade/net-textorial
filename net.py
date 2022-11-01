@@ -13,7 +13,7 @@ from napalm import get_network_driver
 
 
 class NetApp(App):
-    """Get running config of network device"""
+    """Get info from network device"""
 
     CSS_PATH = "net.css"
 
@@ -27,12 +27,13 @@ class NetApp(App):
         self.query_one(Input).focus()
 
     def on_input_submitted(self, message: Input.Submitted) -> None:
-        """A coroutine to handle a text changed message."""
+        """Runs when user hits enter"""
         if message.value:
             # Look up the word in the background
             self.get_device_info(message.value)
 
     def get_device_info(self, items) -> None:
+        """Terrible looking function with a bunch of if statements"""
         things = items.split(" ")
         driver = get_network_driver("eos")
         with driver(things[0], "admin", "admin") as device:
@@ -52,6 +53,8 @@ class NetApp(App):
             elif things[1] == "cli":
                 command = device.cli([" ".join(things[2:])])
                 stuff = command[f"{' '.join(things[2:])}"]
+            else:
+                stuff = f"Sorry, '{things[1]}' is not supported"
 
         syntax = Syntax(stuff, "teratermmacro", theme="nord", line_numbers=True)
         self.query_one("#results", Static).update(syntax)
