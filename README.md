@@ -1,25 +1,19 @@
 # net-textual
 
-Simple app showing the use-case of text user interface (TUI) with network devices.
+Originally developed by [@JulioPDX](https://github.com/JulioPDX), this is a simple app showing off the power of a text user interface (TUI) and how it can be used with network automation.
 
-Under the hood, this is leveraging two excellent projects in [NAPALM](https://napalm.readthedocs.io/en/latest/) and [Textual](https://textual.textualize.io/). Thank you to all involved!
+With recent changes, it has evolved into a learning tool that shows network engineers the differences between raw (human-friendly) CLI output and parsed (structured) output. The tool will take any 'show' command and produce the raw and parsed outputs (using [ntc-templates](https://github.com/networktocode/ntc-templates)). This will be valuable for engineers that want to learn or visualize the differences between the two outputs.
+
+Under the hood, this is leveraging [Netmiko](https://github.com/ktbyers/netmiko) and [Textual](https://textual.textualize.io/). Thank you to all involved!
 
 ## Get started
 
 ```shell
-git clone https://github.com/JulioPDX/net-textual.git
+git clone https://github.com/dannywade/net-textual
 cd net-textual
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
-```
-
-## Lab
-
-This repo leverages a simple [Containerlab](https://containerlab.dev/) file to deploy two Arista EOS nodes. Check out their documentation to get started.
-
-```shell
-sudo containerlab deploy -t clab.yml
 ```
 
 ## Start the app and have fun
@@ -27,7 +21,3 @@ sudo containerlab deploy -t clab.yml
 ```shell
 python3 net.py
 ```
-
-Example of the app running below!
-
-[![asciicast](https://asciinema.org/a/533872.svg)](https://asciinema.org/a/533872)
