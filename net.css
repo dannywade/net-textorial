@@ -1,4 +1,5 @@
 Screen {
+    layout: horizontal;
     background: $panel;
 }
 
@@ -7,20 +8,25 @@ Input {
     margin: 1 0;
 }
 
-#results {
-    width: auto;
-    min-height: 100%;
+.result {
+    width: 1fr;
+    /* min-height: 100%; */
     padding: 0 1;
-}
-
-#results-container {
     background: $background 50%;
-    margin: 0 0 1 0;
-    height: 100%;
-    overflow: hidden auto;
     border: tall $background;
 }
 
-#results-container:focus {
-    border: tall $accent;
+.result-header {
+    width: 1fr;
+    height: 5%;
+    background: $background 100%;
+    border: tall $background;
+}
+
+.results-container {
+    layout: vertical;
+    width: 1fr;
+    margin: 0 0 1 0;
+    overflow: hidden auto;
+    border: tall $background;
 }
