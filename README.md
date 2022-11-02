@@ -6,7 +6,7 @@ With recent changes, it has evolved into a learning tool that shows network engi
 
 Under the hood, this is leveraging [Netmiko](https://github.com/ktbyers/netmiko) and [Textual](https://textual.textualize.io/). Thank you to all involved!
 
-## Get started
+## Get Started
 
 ```shell
 git clone https://github.com/dannywade/net-textual
@@ -16,11 +16,21 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-## Start the app and have fun
+## Basic Usage
 
-```shell
-python3 net.py
-```
+1. Update device credentials in the app code
+2. Run the app
+    ```shell
+    python net.py
+    ```
+3. Enter the hostname/IP of the device and a valid 'show' command in the input box
+    ```shell
+    dist-router1 show ip route
+    ```
+
+## Caveats
+
+- The app currently has hardcoded device credentials in `net.py` for the Cisco DevNet Always-On sandbox that's running a Cisco CSR on a recommended code version. I highly recommend altering the code to use environment variables or a vault solution instead of hardcoding your device credentials. There will be changes to the app code in the future, but for now it's still in a prototype phase.
 
 ## Demo
 
