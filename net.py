@@ -1,17 +1,13 @@
-from __future__ import annotations
 import ipaddress
-
 import json
-
+from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationException
+import os
 from rich.syntax import Syntax
 from rich.text import Text
-
 from textual.app import App, ComposeResult
 from textual.containers import Content
 from textual.widgets import Static, Input
-
-from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationException
-
+# local imports
 from helpers import device_connection
 
 
@@ -51,8 +47,10 @@ class NetApp(App):
         except ValueError:
             host = command_list[0]
         host = command_list[0]
-        # Hardcoded creds - need to change to config file or env vars
-        creds = {"username": "developer", "password": "C1sco12345"}
+        # Try reading from env vars, default to admin/admin
+        user = os.getenv("NET_TEXT_USER", "admin")
+        pw = os.getenv("NET_TEXT_PASS", "admin")
+        creds = {"username": user, "password": pw}
         dev_connect = device_connection(host_id=host, credentials=creds)
         if dev_connect is not None:
             try:
