@@ -4,9 +4,10 @@ from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationExc
 import os
 from rich.syntax import Syntax
 from rich.text import Text
+import pyperclip
 from textual.app import App, ComposeResult
 from textual.containers import Content
-from textual.widgets import Static, Input
+from textual.widgets import Static, Input, Footer
 # local imports
 from helpers import device_connection
 
@@ -15,11 +16,33 @@ class NetApp(App):
     """Get info from network device"""
 
     CSS_PATH = "net.css"
+    BINDINGS = [("q", "quit", "Quit"), ("r", "copy_raw", "Copy raw output"), ("p", "copy_parsed", "Copy parsed output")]
+
+    def action_toggle_sidebar(self) -> None:
+        """Called when user hits 'b' key."""
+        self.show_bar = not self.show_bar
+
+    def action_copy_raw(self) -> None:
+        """Called when user hits 'r' key. Copies the raw command output."""
+        # Queries for widget that holds raw results
+        raw_output = self.query_one("#raw-results")
+        # Extracts text from 'Syntax' renderable and copies to clipboard
+        raw_output = str(raw_output.render().code)
+        pyperclip.copy(raw_output)
+
+    def action_copy_parsed(self) -> None:
+        """Called when user hits 'p' key. Copies the parsed command output."""
+        # Queries for widget that holds parsed results
+        parsed_output = self.query_one("#parsed-results")
+        # Extracts text from 'Syntax' renderable and copies to clipboard
+        parsed_output = str(parsed_output.render().code)
+        pyperclip.copy(parsed_output)
 
     def compose(self) -> ComposeResult:
         yield Input(placeholder="Enter device hostname/IP and command: '<hostname/IP> show <command>'")
         yield Content(Static(Text("Raw Output", justify="center"), classes="result-header"), Static(id="raw-results", classes="result"), classes="results-container")
         yield Content(Static(Text("Parsed Output", justify="center"), classes="result-header"), Static(id="parsed-results", classes="result"), classes="results-container")
+        yield Footer()
 
     def on_mount(self) -> None:
         """Called when app starts."""
@@ -38,7 +61,6 @@ class NetApp(App):
         """
         
         command_list = user_input.split(" ")
-        print(command_list)
         # Check whether entered host is an IP address or hostname
         # It won't matter now, but can provide simple validation in future.
         try:
