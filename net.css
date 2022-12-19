@@ -3,9 +3,67 @@ Screen {
     background: $panel;
 }
 
-Input {
+Dropdown { 
+    max-width: 50;
+}
+
+#input_container {
+    layout: horizontal;
     dock: top;
     margin: 1 0;
+    height: 4;
+}
+
+#input_container Input {
+    dock: top;
+    margin: 1 0;
+}
+
+#input_container Button {
+    dock: right;
+    margin: 1 2 0 1;
+    width: 20%;
+}
+
+
+InventorySidebar {
+    background: $panel;
+    layout: vertical;
+    layer: filters;
+    width: 30%;
+    border: round $primary;
+    height: 100%;
+    transition: offset 250ms in_out_cubic;
+}
+
+InventorySidebar.hidden {
+    offset: -100% 10%;
+}
+
+InventorySidebar Label {
+    text-style: bold;
+}
+
+InventorySidebar Label.h1 {
+    text-align: center;
+    border: hkey $primary;
+}
+
+InventorySidebar Button {
+    margin: 1 1 1 1;
+}
+
+InventorySidebar Horizontal {
+    height: 1fr;
+}
+
+InventorySidebar #last_synced {
+    dock: bottom;
+    margin: 1 0;
+}
+
+.disabled-text {
+    color: $text-disabled;
 }
 
 .result {

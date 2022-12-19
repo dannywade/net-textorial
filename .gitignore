@@ -3,16 +3,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# clab stuff
-clab-simple
-.clab.yml.bak
+# inventory file
+*inventory.json
 
-.ssh/
 
 # C extensions
 *.so
 
 # Distribution / packaging
+.DS_Store
 .Python
 build/
 develop-eggs/

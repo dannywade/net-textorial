@@ -6,17 +6,26 @@ from rich.syntax import Syntax
 from rich.text import Text
 import pyperclip
 from textual.app import App, ComposeResult
-from textual.containers import Content
-from textual.widgets import Static, Input, Footer
+from textual.binding import Binding
+from textual.containers import Content, Container
+from textual.widgets import Static, Input, Footer, Button
+from textual_autocomplete._autocomplete import AutoComplete, Dropdown
+
 # local imports
-from helpers import device_connection
+from helpers import device_connection, get_items
+from inventory import InventorySidebar
 
 
-class NetApp(App):
+class NetTextorialApp(App):
     """Get info from network device"""
 
     CSS_PATH = "net.css"
-    BINDINGS = [("q", "quit", "Quit"), ("r", "copy_raw", "Copy raw output"), ("p", "copy_parsed", "Copy parsed output")]
+    BINDINGS = [
+        Binding("q", "quit", "Quit"),
+        Binding("r", "copy_raw", "Copy raw output"),
+        Binding("p", "copy_parsed", "Copy parsed output"),
+        Binding("i", "inventory", "Inventory"),
+    ]
 
     def action_toggle_sidebar(self) -> None:
         """Called when user hits 'b' key."""
@@ -39,27 +48,64 @@ class NetApp(App):
         pyperclip.copy(parsed_output)
 
     def compose(self) -> ComposeResult:
-        yield Input(placeholder="Enter device hostname/IP and command: '<hostname/IP> show <command>'")
-        yield Content(Static(Text("Raw Output", justify="center"), classes="result-header"), Static(id="raw-results", classes="result"), classes="results-container")
-        yield Content(Static(Text("Parsed Output", justify="center"), classes="result-header"), Static(id="parsed-results", classes="result"), classes="results-container")
+        yield Container(
+            AutoComplete(
+                Input(
+                    placeholder="Enter device hostname/IP and command: '<hostname/IP> show <command>'",
+                    id="command_input",
+                ),
+                Dropdown(
+                    items=get_items,  # Using a callback to dynamically generate items
+                    id="my-dropdown",
+                ),
+            ),
+            Button(label="Go!", variant="primary", id="run_button"),
+            id="input_container",
+        )
+        yield Content(
+            Static(Text("Raw Output", justify="center"), classes="result-header"),
+            Static(id="raw-results", classes="result"),
+            classes="results-container",
+        )
+        yield Content(
+            Static(Text("Parsed Output", justify="center"), classes="result-header"),
+            Static(id="parsed-results", classes="result"),
+            classes="results-container",
+        )
         yield Footer()
+        self.inventory = InventorySidebar(classes="hidden")
+        yield self.inventory
 
     def on_mount(self) -> None:
         """Called when app starts."""
         # Give the input focus, so we can start typing straight away
-        self.query_one(Input).focus()
+        self.query_one("#command_input").focus()
 
-    def on_input_submitted(self, message: Input.Submitted) -> None:
-        """Runs when user hits enter"""
-        if message.value:
-            # Get user input when 'Enter' key is pressed
-            self.get_device_info(message.value)
+    # def on_input_submitted(self, message: Input.Submitted) -> None:
+    #     """Runs when user hits enter"""
+    #     if message.value:
+    #         # Get user input when 'Enter' key is pressed
+    #         self.get_device_info(message.value)
+
+    def on_button_pressed(self, _: Button.Pressed) -> None:
+        """Run when user clicks 'Go!' button"""
+        user_input = self.query_one("#command_input")
+        if user_input.value:
+            # Get user input when user clicks 'Go!' button
+            self.get_device_info(user_input.value)
+
+    def action_inventory(self) -> None:
+        """Toggle the display of the inventory sidebar"""
+        if self.inventory.shown:
+            self.inventory.hide()
+        else:
+            self.inventory.show()
 
     def get_device_info(self, user_input) -> None:
         """
         Allows user to run any CLI command and have the raw and parsed output returned.
         """
-        
+
         command_list = user_input.split(" ")
         # Check whether entered host is an IP address or hostname
         # It won't matter now, but can provide simple validation in future.
@@ -80,10 +126,12 @@ class NetApp(App):
                     raise Exception("Only 'show' commands are supported.")
                 else:
                     with dev_connect as device:
-                            raw_output = device.send_command((" ".join(command_list[1:])))
-                            parsed_output = device.send_command((" ".join(command_list[1:])), use_textfsm=True)
-                            if not parsed_output:
-                                parsed_output = "N/A"
+                        raw_output = device.send_command((" ".join(command_list[1:])))
+                        parsed_output = device.send_command(
+                            (" ".join(command_list[1:])), use_textfsm=True
+                        )
+                        if not parsed_output:
+                            parsed_output = "N/A"
             except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
                 raw_output = f"There was an issue connecting to the device: {e}"
                 parsed_output = "N/A"
@@ -111,12 +159,16 @@ class NetApp(App):
                 # parsed_output is not an iterable (most likely a string), so JSON string conversion is not necessary
                 pass
 
-        raw_results = Syntax(raw_output, "teratermmacro", theme="nord", line_numbers=True)
-        parsed_results = Syntax(parsed_output, "teratermmacro", theme="nord", line_numbers=True)
+        raw_results = Syntax(
+            raw_output, "teratermmacro", theme="nord", line_numbers=True
+        )
+        parsed_results = Syntax(
+            parsed_output, "teratermmacro", theme="nord", line_numbers=True
+        )
         self.query_one("#raw-results", Static).update(raw_results)
         self.query_one("#parsed-results", Static).update(parsed_results)
 
 
 if __name__ == "__main__":
-    app = NetApp()
+    app = NetTextorialApp()
     app.run()
