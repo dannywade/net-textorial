@@ -49,24 +49,29 @@ InventorySidebar Label.h1 {
     border: hkey $primary;
 }
 
+InventorySidebar Label.chkbox-label {
+    text-align: center;
+}
+
 InventorySidebar Button {
     margin: 1 1 1 1;
 }
 
+InventorySidebar Vertical {
+    width: auto;
+    height: auto;
+    margin: 1 0;
+}
+
 #sot_selector_container {
-    layout: grid;
-    grid-size: 3 2;
-    height: 0.5fr;
+    layout: horizontal;
+    width: auto;
+    height: auto;
 }
 
 InventorySidebar #last_synced {
     dock: bottom;
     margin: 1 0;
-}
-
-.sot-selector-cell {
-    text-align: center;
-    margin: 1 0 0 0;
 }
 
 .disabled-text {

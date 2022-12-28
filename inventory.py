@@ -4,7 +4,8 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, Container
 from textual.widgets import Label, Checkbox, Input, Button, Static
 
-from helpers import netbox_sync
+# local imports
+from helpers import sot_sync
 
 
 class InventorySidebar(Vertical):
@@ -18,12 +19,23 @@ class InventorySidebar(Vertical):
             ComposeResult: The layout of the inventory sidebar
         """
         yield Label("Inventory (SoT)", classes="h1")
-        yield Container(Label("Netbox", classes="sot-selector-cell"), Label("Nautobot", classes="sot-selector-cell"), Static(name="sot_label_placeholder", classes="sot-selector-cell"), Checkbox(id="netbox_checkbox"), Checkbox(id="nautobot_checkbox"), Static(name="sot_selector_placeholder", classes="sot-selector-cell"), id="sot_selector_container")
+        yield Container(
+            Vertical(
+                Label("Netbox", classes="chkbox-label"), Checkbox(id="netbox_checkbox")
+            ),
+            Vertical(
+                Label("Nautobot", classes="chkbox-label"),
+                Checkbox(id="nautobot_checkbox"),
+            ),
+            id="sot_selector_container",
+        )
         yield Label("Inventory URL", classes="h2")
         yield Input(
-            placeholder="http://<host>:<port>", id="sot_url", classes="disabled-text"
+            placeholder="https://<url>:<port>",
+            id="sot_url",
+            classes="disabled-text",
         )
-        yield Label("Inventory API token", classes="h2")
+        yield Label("API token", classes="h2")
         yield Input(
             placeholder="abcd1234....",
             password=True,
@@ -57,12 +69,36 @@ class InventorySidebar(Vertical):
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         """Check if SoT is being used for autocompletion and toggle inputs"""
         netbox_checkbox = self.query_one("#netbox_checkbox")
-        if netbox_checkbox.value:
+        nautobot_checkbox = self.query_one("#nautobot_checkbox")
+        msg = self.query_one("#sync_message")
+        if netbox_checkbox.value and nautobot_checkbox.value:
+            # 'Disable' inputs for user
+            self.query_one("#sot_url").add_class("disabled-text")
+            self.query_one("#sot_api_token").add_class("disabled-text")
+            self.query_one("#sot_sync_button").disabled = True
+            # Add helpful error message to user
+            msg.renderable = Text("Please only select one SoT!", style="orchid")
+            msg.refresh()
+        elif netbox_checkbox.value:
+            # Clear any error messages
+            msg.renderable = ""
+            msg.refresh()
             # 'Enable' inputs for user
             self.query_one("#sot_url").remove_class("disabled-text")
             self.query_one("#sot_api_token").remove_class("disabled-text")
             self.query_one("#sot_sync_button").disabled = False
-        if not netbox_checkbox.value:
+        elif nautobot_checkbox.value:
+            # Clear any error messages
+            msg.renderable = ""
+            msg.refresh()
+            # 'Enable' inputs for user
+            self.query_one("#sot_url").remove_class("disabled-text")
+            self.query_one("#sot_api_token").remove_class("disabled-text")
+            self.query_one("#sot_sync_button").disabled = False
+        else:
+            # Clear any error messages
+            msg.renderable = ""
+            msg.refresh()
             # 'Disable' inputs for user
             self.query_one("#sot_url").add_class("disabled-text")
             self.query_one("#sot_api_token").add_class("disabled-text")
@@ -73,7 +109,11 @@ class InventorySidebar(Vertical):
         # Retrieve URL and API token from user
         sot_url = self.query_one("#sot_url", Input)
         api_token = self.query_one("#sot_api_token", Input)
-        nb_sync = netbox_sync(sot_url.value, api_token.value)
+        if self.query_one("#netbox_checkbox").value:
+            source = "netbox"
+        elif self.query_one("#nautobot_checkbox").value:
+            source = "nautobot"
+        nb_sync = sot_sync(sot_url.value, api_token.value, source)
         sync_msg = self.query_one("#sync_message")
         last_sync_msg = self.query_one("#last_synced")
         if nb_sync:

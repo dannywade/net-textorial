@@ -7,6 +7,7 @@ from netmiko import ConnectHandler
 from netmiko.ssh_autodetect import SSHDetect
 import os
 import pynetbox
+import pynautobot
 from rich.text import Text
 from textual_autocomplete._autocomplete import DropdownItem
 
@@ -44,24 +45,36 @@ def device_connection(host_id: str, credentials: dict) -> ConnectHandler:
     return connection
 
 
-def netbox_sync(url: str, token: str) -> bool:
+def sot_sync(url: str, token: str, source: str = None) -> bool:
     """
-    Gathers the following device info from Netbox:
+    Gathers the following device info from Netbox or Nautobot:
         - Name
         - Primary IP
         - Device type
 
     Args:
-        url (str): Netbox instance URL
-        token (str): Netbox API token
+        url (str): Netbox/Nautobot instance URL
+        token (str): Netbox/Nautobot API token
+        source (str): Specifies the SoT system. Valid options include: "netbox" or "nautobot"
 
     Returns:
         Boolean
     """
+    if source is None:
+        # Source must be specified. Probably should add helpful error message
+        return False
+
     if url and token:
         # User must provide URL and API token
-        # Builds query objects for Netbox
-        nb = pynetbox.api(url, token)
+        # Builds query objects for Netbox or Nautobot
+        if source == "netbox":
+            nb = pynetbox.api(url, token)
+        elif source == "nautobot":
+            nb = pynautobot.api(url, token)
+        else:
+            # Invalid source was provided. Again, probably should add helpful error message
+            return False
+        # Extract device objs from SoT
         devices = nb.dcim.devices.all()
     else:
         return False
@@ -77,19 +90,19 @@ def netbox_sync(url: str, token: str) -> bool:
                     "device_type": str(device.device_type),
                 }
                 device_list.append(device_obj)
-    except pynetbox.RequestError:
+    except (pynetbox.RequestError, pynautobot.core.query.RequestError):
         return False
 
     # Serializing json
     json_object = json.dumps(device_list, indent=4)
 
-    # Writing to sample.json
-    with open("netbox_inventory.json", "w") as outfile:
+    # Writing devices to JSON file
+    with open("sot_inventory.json", "w") as outfile:
         outfile.write(json_object)
         inv_filepath = os.path.dirname(os.path.abspath(__file__))
 
     # Confirm inventory file was created and exists - return True or False
-    inv_file_exists = os.path.exists(f"{inv_filepath}/netbox_inventory.json")
+    inv_file_exists = os.path.exists(f"{inv_filepath}/sot_inventory.json")
 
     return inv_file_exists
 
@@ -103,7 +116,7 @@ def get_items(value: str, cursor_position: int) -> list[DropdownItem]:
     """
 
     try:
-        with open(f"./netbox_inventory.json", "r") as f:
+        with open(f"./sot_inventory.json", "r") as f:
             nb_devices = json.load(f)
     except FileNotFoundError:
         return ""
