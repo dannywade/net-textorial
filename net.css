@@ -53,13 +53,20 @@ InventorySidebar Button {
     margin: 1 1 1 1;
 }
 
-InventorySidebar Horizontal {
-    height: 1fr;
+#sot_selector_container {
+    layout: grid;
+    grid-size: 3 2;
+    height: 0.5fr;
 }
 
 InventorySidebar #last_synced {
     dock: bottom;
     margin: 1 0;
+}
+
+.sot-selector-cell {
+    text-align: center;
+    margin: 1 0 0 0;
 }
 
 .disabled-text {

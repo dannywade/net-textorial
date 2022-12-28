@@ -1,8 +1,8 @@
 import datetime
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Vertical
-from textual.widgets import Label, Checkbox, Input, Button
+from textual.containers import Vertical, Container
+from textual.widgets import Label, Checkbox, Input, Button, Static
 
 from helpers import netbox_sync
 
@@ -18,8 +18,7 @@ class InventorySidebar(Vertical):
             ComposeResult: The layout of the inventory sidebar
         """
         yield Label("Inventory (SoT)", classes="h1")
-        yield Label("Netbox", classes="h2")
-        yield Checkbox(id="netbox_checkbox")
+        yield Container(Label("Netbox", classes="sot-selector-cell"), Label("Nautobot", classes="sot-selector-cell"), Static(name="sot_label_placeholder", classes="sot-selector-cell"), Checkbox(id="netbox_checkbox"), Checkbox(id="nautobot_checkbox"), Static(name="sot_selector_placeholder", classes="sot-selector-cell"), id="sot_selector_container")
         yield Label("Inventory URL", classes="h2")
         yield Input(
             placeholder="http://<host>:<port>", id="sot_url", classes="disabled-text"
