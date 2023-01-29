@@ -27,6 +27,10 @@ class InventorySidebar(Vertical):
                 Label("Nautobot", classes="chkbox-label"),
                 Checkbox(id="nautobot_checkbox"),
             ),
+            Vertical(
+                Label("DNAC", classes="chkbox-label"),
+                Checkbox(id="dnac_checkbox"),
+            ),
             id="sot_selector_container",
         )
         yield Label("Inventory URL", classes="h2")
@@ -70,8 +74,14 @@ class InventorySidebar(Vertical):
         """Check if SoT is being used for autocompletion and toggle inputs"""
         netbox_checkbox = self.query_one("#netbox_checkbox")
         nautobot_checkbox = self.query_one("#nautobot_checkbox")
+        dnac_checkbox = self.query_one("#dnac_checkbox")
         msg = self.query_one("#sync_message")
-        if netbox_checkbox.value and nautobot_checkbox.value:
+        chkbox_values = [
+            netbox_checkbox.value,
+            nautobot_checkbox.value,
+            dnac_checkbox.value,
+        ]
+        if all(chkbox_values):
             # 'Disable' inputs for user
             self.query_one("#sot_url").add_class("disabled-text")
             self.query_one("#sot_api_token").add_class("disabled-text")
@@ -88,6 +98,14 @@ class InventorySidebar(Vertical):
             self.query_one("#sot_api_token").remove_class("disabled-text")
             self.query_one("#sot_sync_button").disabled = False
         elif nautobot_checkbox.value:
+            # Clear any error messages
+            msg.renderable = ""
+            msg.refresh()
+            # 'Enable' inputs for user
+            self.query_one("#sot_url").remove_class("disabled-text")
+            self.query_one("#sot_api_token").remove_class("disabled-text")
+            self.query_one("#sot_sync_button").disabled = False
+        elif dnac_checkbox.value:
             # Clear any error messages
             msg.renderable = ""
             msg.refresh()
@@ -113,6 +131,8 @@ class InventorySidebar(Vertical):
             source = "netbox"
         elif self.query_one("#nautobot_checkbox").value:
             source = "nautobot"
+        elif self.query_one("#dnac_checkbox").value:
+            source = "dnac"
         nb_sync = sot_sync(sot_url.value, api_token.value, source)
         sync_msg = self.query_one("#sync_message")
         last_sync_msg = self.query_one("#last_synced")

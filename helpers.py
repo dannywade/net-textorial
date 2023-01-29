@@ -171,7 +171,7 @@ def dnac_inventory(url: str, token: str) -> bool:
         "X-Auth-Token": token,
     }
     # Get total number of devices to figure out offset for larger inventories
-    total_dev_count = get_device_count()
+    total_dev_count = get_device_count(url, token)
     if total_dev_count == 0:
         # If there are no devices or an error collecting the device count
         return False
@@ -207,19 +207,18 @@ def dnac_inventory(url: str, token: str) -> bool:
         try:
             # Executes device collection and generates local JSON inventory file
             for device in device_list:
-                if device.name is not None and device.primary_ip is not None:
-                    device_obj = {
-                        "name": str(device.hostname),
-                        "primary_ip": str(device.managementIpAddress),
-                        "device_type": str(device.platformId),
-                    }
-                    device_export.append(device_obj)
+                device_obj = {
+                    "name": str(device.get("hostname")),
+                    "primary_ip": str(device.get("managementIpAddress")),
+                    "device_type": str(device.get("platformId")),
+                }
+                device_export.append(device_obj)
         except IndexError:
             # Assumes list is empty and avoids
             return False
 
         # Serializing json
-        json_object = json.dumps(device_list, indent=4)
+        json_object = json.dumps(device_export, indent=4)
 
         # Writing devices to JSON file
         with open("sot_inventory.json", "w") as outfile:
