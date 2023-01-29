@@ -1,4 +1,5 @@
 import json
+from math import ceil
 from netmiko.exceptions import (
     NetmikoAuthenticationException,
     NetmikoTimeoutException,
@@ -8,6 +9,7 @@ from netmiko.ssh_autodetect import SSHDetect
 import os
 import pynetbox
 import pynautobot
+import requests
 from rich.text import Text
 from textual_autocomplete._autocomplete import DropdownItem
 
@@ -66,6 +68,9 @@ def sot_sync(url: str, token: str, source: str = None) -> bool:
 
     if url and token:
         # User must provide URL and API token
+        # Defer to helper function to collect DNAC inventory
+        if source == "dnac":
+            return dnac_inventory(url, token)
         # Builds query objects for Netbox or Nautobot
         if source == "netbox":
             nb = pynetbox.api(url, token)
@@ -139,3 +144,89 @@ def get_items(value: str, cursor_position: int) -> list[DropdownItem]:
     ordered = sorted(matches, key=lambda v: v.main.plain.startswith(value.lower()))
 
     return ordered
+
+
+def get_device_count(url: str, token: str) -> int:
+    """Retrieve device count from DNAC inventory"""
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Auth-Token": token,
+    }
+    device_count_url = f"{url}/dna/intent/api/v1/network-device/count"
+    response = requests.get(url=device_count_url, headers=headers, verify=False)
+    if response.status_code == 200:
+        device_count = response.json()["response"]
+        return device_count
+    else:
+        # If device count API call fails, return 0
+        return 0
+
+
+def dnac_inventory(url: str, token: str) -> bool:
+    """Retrieve all devices from DNAC inventory"""
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Auth-Token": token,
+    }
+    # Get total number of devices to figure out offset for larger inventories
+    total_dev_count = get_device_count()
+    if total_dev_count == 0:
+        # If there are no devices or an error collecting the device count
+        return False
+    # Default and max limit for device inventory is 500, so we need to figure out how many API calls to make
+    total_pages = ceil(total_dev_count / 500)
+    # There's a hard limit to only return 500 devices per call, so we must change the params
+    # if there's more than 500 devices in the inventory
+    # Initialize device list
+    device_list = []
+    for page in range(total_pages):
+        # Make additional calls (if necessary) - needed for inventories with more than 500 devices
+        calc_offset = page * 500
+        if calc_offset > 0:
+            dnac_devices_url = (
+                f"{url}/dna/intent/api/v1/network-device?limit=500&offset={calc_offset}"
+            )
+        else:
+            # No offset needed
+            dnac_devices_url = f"{url}/dna/intent/api/v1/network-device?limit=500"
+        response = requests.get(
+            url=dnac_devices_url,
+            headers=headers,
+            verify=False,
+        )
+        if response.status_code == 200:
+            # Add devices to the response from the initial call
+            device_list.extend(response.json()["response"])
+        else:
+            return False
+
+        device_export = []
+        # Time to create inventory JSON file
+        try:
+            # Executes device collection and generates local JSON inventory file
+            for device in device_list:
+                if device.name is not None and device.primary_ip is not None:
+                    device_obj = {
+                        "name": str(device.hostname),
+                        "primary_ip": str(device.managementIpAddress),
+                        "device_type": str(device.platformId),
+                    }
+                    device_export.append(device_obj)
+        except IndexError:
+            # Assumes list is empty and avoids
+            return False
+
+        # Serializing json
+        json_object = json.dumps(device_list, indent=4)
+
+        # Writing devices to JSON file
+        with open("sot_inventory.json", "w") as outfile:
+            outfile.write(json_object)
+            inv_filepath = os.path.dirname(os.path.abspath(__file__))
+
+        # Confirm inventory file was created and exists - return True or False
+        inv_file_exists = os.path.exists(f"{inv_filepath}/sot_inventory.json")
+
+        return inv_file_exists
