@@ -9,6 +9,8 @@ With recent changes, it has evolved into a learning tool that shows network engi
 
 Under the hood, this tool is leveraging [Netmiko](https://github.com/ktbyers/netmiko) and [Textual](https://textual.textualize.io/). Thank you to all involved!
 
+If you'd like an overview of the tool, check out my [YouTube video](https://youtu.be/H8uGOIK2ZqY)!
+
 ## Features
 - **It just works**: Set your device CLI credentials as environment variables and let it rip! No need to define a device type! All device types are automagically determined using Netmiko's awesome `ssh_autodetect` module.
 - **Vendor agnostic**: This tool is not built for a particular vendor. With vendor-agnostic libraries being used under the hood, many different device vendors and device types are supported. See [Device Support](#device-support) section for more details.
@@ -59,7 +61,6 @@ Any device that is supported by Netmiko can be used with this tool. Under the ho
 With Genie and ntc-templates (TextFSM) being the two major parsing libraries in the game, there's a goal to support both libraries. Currently, only ntc-templates is supported and used to parse all command output. Genie parsers will be supported in the future.
 
 ## Demo
-
 
 https://user-images.githubusercontent.com/13680237/199552401-9e9c58b0-6cd9-4dcb-8512-b91cc8d010b0.mov
 
