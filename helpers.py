@@ -11,7 +11,7 @@ import pynetbox
 import pynautobot
 import requests
 from rich.text import Text
-from textual_autocomplete._autocomplete import DropdownItem
+from textual_autocomplete._autocomplete import DropdownItem, InputState
 
 
 def device_connection(host_id: str, credentials: dict) -> ConnectHandler:
@@ -112,7 +112,7 @@ def sot_sync(url: str, token: str, source: str = None) -> bool:
     return inv_file_exists
 
 
-def get_items(value: str, cursor_position: int) -> list[DropdownItem]:
+def get_items(input_state: InputState) -> list[DropdownItem]:
     """Attempt to read local inventory file (JSON) and build list of DropdownItems to use for autocomplete
 
     Args:
@@ -137,11 +137,13 @@ def get_items(value: str, cursor_position: int) -> list[DropdownItem]:
             )
         )
 
-    # Only keep cities that contain the Input value as a substring
-    matches = [c for c in items if value.lower() in c.main.plain.lower()]
+    # Only keep devices that contain the Input value as a substring
+    matches = [c for c in items if input_state.value.lower() in c.main.plain.lower()]
 
     # Favor items that start with the Input value, pull them to the top
-    ordered = sorted(matches, key=lambda v: v.main.plain.startswith(value.lower()))
+    ordered = sorted(
+        matches, key=lambda v: v.main.plain.startswith(input_state.value.lower())
+    )
 
     return ordered
 

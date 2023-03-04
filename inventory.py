@@ -2,7 +2,7 @@ import datetime
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Vertical, Container
-from textual.widgets import Label, Checkbox, Input, Button, Static
+from textual.widgets import Label, Switch, Input, Button
 
 # local imports
 from helpers import sot_sync
@@ -21,15 +21,15 @@ class InventorySidebar(Vertical):
         yield Label("Inventory (SoT)", classes="h1")
         yield Container(
             Vertical(
-                Label("Netbox", classes="chkbox-label"), Checkbox(id="netbox_checkbox")
+                Label("Netbox", classes="chkbox-label"), Switch(id="netbox_checkbox")
             ),
             Vertical(
                 Label("Nautobot", classes="chkbox-label"),
-                Checkbox(id="nautobot_checkbox"),
+                Switch(id="nautobot_checkbox"),
             ),
             Vertical(
                 Label("DNAC", classes="chkbox-label"),
-                Checkbox(id="dnac_checkbox"),
+                Switch(id="dnac_checkbox"),
             ),
             id="sot_selector_container",
         )
@@ -70,7 +70,7 @@ class InventorySidebar(Vertical):
         """Confirm whether inventory is being shown"""
         return not self.has_class("hidden")
 
-    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+    def on_checkbox_changed(self, event: Switch.Changed) -> None:
         """Check if SoT is being used for autocompletion and toggle inputs"""
         netbox_checkbox = self.query_one("#netbox_checkbox")
         nautobot_checkbox = self.query_one("#nautobot_checkbox")
