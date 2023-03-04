@@ -18,7 +18,7 @@ class InventorySidebar(Vertical):
         Returns:
             ComposeResult: The layout of the inventory sidebar
         """
-        yield Label("Inventory (SoT)", classes="h1")
+        yield Label("Inventory (SoT)", id="sot_header", classes="h1")
         yield Container(
             Vertical(
                 Label("Netbox", classes="chkbox-label"), Switch(id="netbox_checkbox")

@@ -32,7 +32,8 @@ InventorySidebar {
     layer: filters;
     width: 30%;
     border: round $primary;
-    height: 100%;
+    offset: 0 6;
+    height: 80%;
     transition: offset 250ms in_out_cubic;
 }
 
@@ -67,6 +68,10 @@ InventorySidebar Vertical {
     layout: horizontal;
     width: auto;
     height: auto;
+}
+
+#sot_header {
+    width: 1fr;
 }
 
 InventorySidebar #last_synced {
