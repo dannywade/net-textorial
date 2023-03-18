@@ -70,7 +70,7 @@ class InventorySidebar(Vertical):
         """Confirm whether inventory is being shown"""
         return not self.has_class("hidden")
 
-    def on_checkbox_changed(self, event: Switch.Changed) -> None:
+    def on_switch_changed(self, event: Switch.Changed) -> None:
         """Check if SoT is being used for autocompletion and toggle inputs"""
         netbox_checkbox = self.query_one("#netbox_checkbox")
         nautobot_checkbox = self.query_one("#nautobot_checkbox")
