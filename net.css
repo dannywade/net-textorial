@@ -1,11 +1,13 @@
 Screen {
     layout: horizontal;
     background: $panel;
+    overflow: hidden;
+    layers: base filters;
 }
 
-Dropdown { 
+/* Dropdown { 
     max-width: 50;
-}
+} */
 
 #input_container {
     layout: horizontal;
@@ -32,12 +34,13 @@ InventorySidebar {
     layer: filters;
     width: 30%;
     border: round $primary;
-    height: 100%;
+    offset: 0 6;
+    height: 80%;
     transition: offset 250ms in_out_cubic;
 }
 
 InventorySidebar.hidden {
-    offset: -100% 10%;
+    offset: -100% 20%;
 }
 
 InventorySidebar Label {
@@ -64,9 +67,13 @@ InventorySidebar Vertical {
 }
 
 #sot_selector_container {
-    layout: horizontal;
+    layout: vertical;
     width: auto;
     height: auto;
+}
+
+#sot_header {
+    width: 1fr;
 }
 
 InventorySidebar #last_synced {
