@@ -13,17 +13,14 @@ Screen {
     layout: horizontal;
     dock: top;
     margin: 1 0;
-    height: 4;
+    height: auto;
 }
 
 #input_container Input {
-    dock: top;
-    margin: 1 0;
+    width: 80%;
 }
 
 #input_container Button {
-    dock: right;
-    margin: 1 2 0 1;
     width: 20%;
 }
 

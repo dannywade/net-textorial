@@ -56,6 +56,7 @@ class NetTextorialApp(App):
                 placeholder="Enter device hostname/IP and command: '<hostname/IP> show <command>'",
                 id="command_input",
             ),
+            Button(label="Go!", variant="primary", id="run_button"),
             id="input_container",
         )
         yield Content(
