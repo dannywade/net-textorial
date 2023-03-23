@@ -107,3 +107,7 @@ InventorySidebar #last_synced {
     overflow: hidden auto;
     border: tall $background;
 }
+
+InventoryScreen #inv_copy_label {
+    dock: top;
+}

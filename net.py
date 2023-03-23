@@ -14,7 +14,7 @@ from textual.widgets import Static, Input, Footer, Button
 
 # local imports
 from helpers import device_connection
-from inventory import InventorySidebar
+from inventory import InventorySidebar, InventoryScreen
 
 
 class NetTextorialApp(App):
@@ -26,7 +26,9 @@ class NetTextorialApp(App):
         Binding("r", "copy_raw", "Copy raw output"),
         Binding("p", "copy_parsed", "Copy parsed output"),
         Binding("i", "inventory", "Inventory"),
+        Binding("v", "push_screen('inventory')", "Inventory Page"),
     ]
+    SCREENS = {"inventory": InventoryScreen()}
 
     def action_toggle_sidebar(self) -> None:
         """Called when user hits 'b' key."""
@@ -74,12 +76,6 @@ class NetTextorialApp(App):
         """Called when app starts."""
         # Give the input focus, so we can start typing straight away
         self.query_one("#command_input").focus()
-
-    # def on_input_submitted(self, message: Input.Submitted) -> None:
-    #     """Runs when user hits enter"""
-    #     if message.value:
-    #         # Get user input when 'Enter' key is pressed
-    #         self.get_device_info(message.value)
 
     def on_button_pressed(self, _: Button.Pressed) -> None:
         """Run when user clicks 'Go!' button"""
