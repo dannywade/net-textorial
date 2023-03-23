@@ -233,3 +233,22 @@ def dnac_inventory(url: str, token: str) -> bool:
         inv_file_exists = os.path.exists(f"{inv_filepath}/sot_inventory.json")
 
         return inv_file_exists
+
+
+def load_inventory_file() -> list[dict]:
+    """
+    Loads JSON inventory file synced from SoT
+
+    Example:
+        [{'name': 'ams01-edge-01', 'primary_ip': '10.11.128.1/32', 'device_type': 'DCS-7280CR2-60'}, {'name': 'ams01-edge-02', 'primary_ip': '10.11.128.2/32', 'device_type': 'DCS-7280CR2-60'},...]
+    """
+    try:
+        with open("sot_inventory.json") as json_file:
+            data = json.load(json_file)
+    except:
+        data = []
+    return data
+
+
+if __name__ == "__main__":
+    load_inventory_file()
