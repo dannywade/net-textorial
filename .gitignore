@@ -5,6 +5,8 @@ __pycache__/
 
 # inventory file
 *inventory.json
+# output files
+*output.json
 
 
 # C extensions

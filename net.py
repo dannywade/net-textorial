@@ -1,19 +1,18 @@
-import ipaddress
 import json
-from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationException
 import os
 from rich.syntax import Syntax
-from rich.text import Text
+from rich.tree import Tree
+from pathlib import Path
 import pyperclip
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Content, Container
-from textual.widgets import Static, Input, Footer, Button
+from textual.widgets import Static, Input, Footer, Button, Tabs, Tab
 
 # from textual_autocomplete._autocomplete import AutoComplete, Dropdown
 
 # local imports
-from helpers import device_connection
+from helpers import get_device_info, add_node
 from inventory import InventorySidebar, InventoryScreen
 
 
@@ -23,8 +22,7 @@ class NetTextorialApp(App):
     CSS_PATH = "net.css"
     BINDINGS = [
         Binding("q", "quit", "Quit"),
-        Binding("r", "copy_raw", "Copy raw output"),
-        Binding("p", "copy_parsed", "Copy parsed output"),
+        Binding("r", "copy_output", "Copy output"),
         Binding("i", "inventory", "Inventory"),
         Binding("v", "push_screen('inventory')", "Inventory Page"),
     ]
@@ -34,21 +32,18 @@ class NetTextorialApp(App):
         """Called when user hits 'b' key."""
         self.show_bar = not self.show_bar
 
-    def action_copy_raw(self) -> None:
+    def action_copy_output(self) -> None:
         """Called when user hits 'r' key. Copies the raw command output."""
         # Queries for widget that holds raw results
-        raw_output = self.query_one("#raw-results")
-        # Extracts text from 'Syntax' renderable and copies to clipboard
-        raw_output = str(raw_output.render().code)
-        pyperclip.copy(raw_output)
-
-    def action_copy_parsed(self) -> None:
-        """Called when user hits 'p' key. Copies the parsed command output."""
-        # Queries for widget that holds parsed results
-        parsed_output = self.query_one("#parsed-results")
-        # Extracts text from 'Syntax' renderable and copies to clipboard
-        parsed_output = str(parsed_output.render().code)
-        pyperclip.copy(parsed_output)
+        raw_output = self.query_one("#output-results")
+        tabs = self.query(Tabs).first()
+        # Figures out whether the 'Parsed Output (tree)' tab is currently active
+        if tabs.validate_active("tab-3"):
+            output = str(raw_output.render())
+        else:
+            # Extracts text from 'Syntax' renderable and copies to clipboard
+            output = str(raw_output.render().code)
+        pyperclip.copy(output)
 
     def compose(self) -> ComposeResult:
         yield Container(
@@ -60,13 +55,10 @@ class NetTextorialApp(App):
             id="input_container",
         )
         yield Content(
-            Static(Text("Raw Output", justify="center"), classes="result-header"),
-            Static(id="raw-results", classes="result"),
-            classes="results-container",
-        )
-        yield Content(
-            Static(Text("Parsed Output", justify="center"), classes="result-header"),
-            Static(id="parsed-results", classes="result"),
+            Tabs(
+                "Raw Output", "Parsed Output", "Parsed Output (tree)", id="output-tabs"
+            ),
+            Static(id="output-results", classes="result"),
             classes="results-container",
         )
         yield Footer()
@@ -77,13 +69,18 @@ class NetTextorialApp(App):
         """Called when app starts."""
         # Give the input focus, so we can start typing straight away
         self.query_one("#command_input").focus()
+        # Initialize outputs
+        self.raw_output = ""
+        self.parsed_output = ""
 
     def on_button_pressed(self, _: Button.Pressed) -> None:
         """Run when user clicks 'Go!' button"""
         user_input = self.query_one("#command_input")
         if user_input.value:
             # Get user input when user clicks 'Go!' button
-            self.get_device_info(user_input.value)
+            outputs = get_device_info(user_input.value)
+            self.raw_output = outputs[0]
+            self.parsed_output = outputs[1]
 
     def action_inventory(self) -> None:
         """Toggle the display of the inventory sidebar"""
@@ -92,72 +89,30 @@ class NetTextorialApp(App):
         else:
             self.inventory.show()
 
-    def get_device_info(self, user_input) -> None:
-        """
-        Allows user to run any CLI command and have the raw and parsed output returned.
-        """
-
-        command_list = user_input.split(" ")
-        # Check whether entered host is an IP address or hostname
-        # It won't matter now, but can provide simple validation in future.
-        try:
-            ipaddress.ip_address(command_list[0])
-            host = command_list[0]
-        except ValueError:
-            host = command_list[0]
-        host = command_list[0]
-        # Try reading from env vars, default to admin/admin
-        user = os.getenv("NET_TEXT_USER", "admin")
-        pw = os.getenv("NET_TEXT_PASS", "admin")
-        creds = {"username": user, "password": pw}
-        dev_connect = device_connection(host_id=host, credentials=creds)
-        if dev_connect is not None:
-            try:
-                if command_list[1] != "show":
-                    raise Exception("Only 'show' commands are supported.")
-                else:
-                    with dev_connect as device:
-                        raw_output = device.send_command((" ".join(command_list[1:])))
-                        parsed_output = device.send_command(
-                            (" ".join(command_list[1:])), use_textfsm=True
-                        )
-                        if not parsed_output:
-                            parsed_output = "N/A"
-            except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
-                raw_output = f"There was an issue connecting to the device: {e}"
-                parsed_output = "N/A"
-            except Exception as e:
-                raw_output = f"There was an error: {e}"
-                parsed_output = "N/A"
-        else:
-            raw_output = "Could not connect to device."
-            parsed_output = "N/A"
-
-        # Cleanse the output if invalid command provided by user
-        if "Invalid input detected" in raw_output:
-            raw_output = "Invalid command sent to the device."
-            parsed_output = "No parser available."
-        # Convert parsed output to string and format
-        if "\n" in parsed_output:
-            # If newline characters are returned, there's a good chance there was not a parser available
-            parsed_output = "No parser available."
-        else:
-            try:
-                # Check if parsed_output is an iterable (dict, list, etc.) and convert to JSON string
-                iter(parsed_output)
-                parsed_output = json.dumps(parsed_output, indent=2)
-            except TypeError:
-                # parsed_output is not an iterable (most likely a string), so JSON string conversion is not necessary
-                pass
-
-        raw_results = Syntax(
-            raw_output, "teratermmacro", theme="nord", line_numbers=True
-        )
-        parsed_results = Syntax(
-            parsed_output, "teratermmacro", theme="nord", line_numbers=True
-        )
-        self.query_one("#raw-results", Static).update(raw_results)
-        self.query_one("#parsed-results", Static).update(parsed_results)
+    def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
+        """Handle TabActivated message sent by Tabs."""
+        if event.tab.id == "tab-1":
+            self.query_one("#output-results", Static).update(
+                Syntax(
+                    self.raw_output, "teratermmacro", theme="nord", line_numbers=True
+                )
+            )
+        elif event.tab.id == "tab-2":
+            self.query_one("#output-results", Static).update(
+                Syntax(
+                    self.parsed_output, "teratermmacro", theme="nord", line_numbers=True
+                )
+            )
+        elif event.tab.id == "tab-3":
+            # Load the JSON file
+            file_path = Path(__file__).parent / "parsed_output.json"
+            with open(file_path) as parsed_data:
+                self.json_data = json.load(parsed_data)
+            # Update the correct tab
+            tree: Tree[dict] = Tree("Parsed Output")
+            # json_node = tree.add("Parsed Output")
+            tree = add_node("Parsed Output", tree, self.json_data)
+            self.query_one("#output-results", Static).update(tree)
 
 
 if __name__ == "__main__":
