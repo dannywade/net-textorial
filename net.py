@@ -39,7 +39,7 @@ class NetTextorialApp(App):
         tabs = self.query(Tabs).first()
         # Figures out whether the 'Parsed Output (tree)' tab is currently active
         if tabs.validate_active("tab-3"):
-            output = str(raw_output.render())
+            output = "Manually copy tree output from app."
         else:
             # Extracts text from 'Syntax' renderable and copies to clipboard
             output = str(raw_output.render().code)
