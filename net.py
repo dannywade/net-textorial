@@ -1,5 +1,5 @@
+import asyncio
 import json
-import os
 from rich.syntax import Syntax
 from rich.tree import Tree
 from pathlib import Path
@@ -12,7 +12,7 @@ from textual.widgets import Static, Input, Footer, Button, Tabs, Tab
 # from textual_autocomplete._autocomplete import AutoComplete, Dropdown
 
 # local imports
-from helpers import get_device_info, add_node
+from helpers import ai_chat, get_device_info, add_node, write_json_file
 from inventory import InventorySidebar, InventoryScreen
 
 
@@ -56,7 +56,11 @@ class NetTextorialApp(App):
         )
         yield Content(
             Tabs(
-                "Raw Output", "Parsed Output", "Parsed Output (tree)", id="output-tabs"
+                "Raw Output",
+                "Parsed Output",
+                "Parsed Output (tree)",
+                "Learn with ChatGPT",
+                id="output-tabs",
             ),
             Static(id="output-results", classes="result"),
             classes="results-container",
@@ -81,6 +85,8 @@ class NetTextorialApp(App):
             outputs = get_device_info(user_input.value)
             self.raw_output = outputs[0]
             self.parsed_output = outputs[1]
+            # Write parsed output to local JSON file
+            write_json_file("parsed_output", self.parsed_output)
 
     def action_inventory(self) -> None:
         """Toggle the display of the inventory sidebar"""
@@ -89,30 +95,76 @@ class NetTextorialApp(App):
         else:
             self.inventory.show()
 
-    def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
+    async def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
         """Handle TabActivated message sent by Tabs."""
+        # Raw Output tab
         if event.tab.id == "tab-1":
             self.query_one("#output-results", Static).update(
                 Syntax(
                     self.raw_output, "teratermmacro", theme="nord", line_numbers=True
                 )
             )
+        # Parsed Output tab
         elif event.tab.id == "tab-2":
-            self.query_one("#output-results", Static).update(
-                Syntax(
-                    self.parsed_output, "teratermmacro", theme="nord", line_numbers=True
-                )
-            )
-        elif event.tab.id == "tab-3":
             # Load the JSON file
             file_path = Path(__file__).parent / "parsed_output.json"
             with open(file_path) as parsed_data:
-                self.json_data = json.load(parsed_data)
+                self.parsed_output = json.load(parsed_data)
+            # Convert loaded JSON to string for display
+            parsed_jstring = json.dumps(self.parsed_output, indent=2)
+            self.query_one("#output-results", Static).update(
+                Syntax(
+                    parsed_jstring,
+                    "teratermmacro",
+                    theme="nord",
+                    line_numbers=True,
+                )
+            )
+        # Parsed Output (tree) tab
+        elif event.tab.id == "tab-3":
+            # Load the JSON file
+            try:
+                file_path = Path(__file__).parent / "parsed_output.json"
+                with open(file_path) as parsed_data:
+                    self.json_data = json.load(parsed_data)
+            except:
+                self.query_one("#output-results", Static).update(
+                    "Local JSON file could not be loaded. Please ensure parsed output is available."
+                )
+                return
             # Update the correct tab
             tree: Tree[dict] = Tree("Parsed Output")
             # json_node = tree.add("Parsed Output")
             tree = add_node("Parsed Output", tree, self.json_data)
             self.query_one("#output-results", Static).update(tree)
+        # Learn with ChatGPT tab
+        elif event.tab.id == "tab-4":
+            # Load the JSON file, if not already loaded
+            try:
+                file_path = Path(__file__).parent / "parsed_output.json"
+                with open(file_path) as parsed_data:
+                    self.json_data = json.load(parsed_data)
+            except:
+                self.query_one("#output-results", Static).update(
+                    "Local JSON file could not be loaded. Please ensure parsed output is available."
+                )
+                return
+            loop = asyncio.get_running_loop()
+            # Placeholder while ChatGPT loads answer
+            self.query_one("#output-results", Static).update(f"Waiting for ChatGPT...")
+            # Ask ChatGPT to explain the parsed output
+            result = await loop.run_in_executor(
+                None, ai_chat, f"Tell me about this JSON payload: {self.json_data}"
+            )
+            # Show ChatGPT results
+            if result:
+                self.query_one("#output-results", Static).update(
+                    f"ChatGPT response: \n\n{result['choices'][0]['message']['content']}"
+                )
+            else:
+                self.query_one("#output-results", Static).update(
+                    "ChatGPT is currently not responding..."
+                )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import ipaddress
 import json
 from math import ceil
+from typing import Union
 from netmiko.exceptions import (
     NetmikoAuthenticationException,
     NetmikoTimeoutException,
@@ -313,20 +314,21 @@ def load_inventory_file() -> list[dict]:
     return data
 
 
-def write_json_file(filename: str, output: dict) -> Tree:
-    # Write parsed output to a JSON file
+def write_json_file(filename: str, output: Union[dict, list]) -> Tree:
+    """Write parsed output to a JSON file"""
     with open(f"{filename}.json", "w") as output_file:
         json.dump(output, output_file, indent=2)
 
 
 def add_node(name: str, tree: Tree, data: list) -> str:
+    """Add nodes to Rich Tree renderable obj"""
     if isinstance(data, dict):
         tree.label = Text(f"{{}}")
         for key, value in data.items():
-            new_node = tree.add(Text(f"{key}", style="bold red"))
+            new_node = tree.add(Text(f"{key} {{dict}}", style="bold red"))
             add_node(key, new_node, value)
     elif isinstance(data, list):
-        tree.label = Text(f"{name}", style="bold red")
+        tree.label = Text(f"{name} [list]", style="bold red")
         for index, value in enumerate(data):
             new_node = tree.add("")
             add_node(str(index), new_node, value)
@@ -336,5 +338,19 @@ def add_node(name: str, tree: Tree, data: list) -> str:
     return tree
 
 
-if __name__ == "__main__":
-    load_inventory_file()
+def ai_chat(prompt: str) -> str:
+    """Ask ChatGPT a question. Assumes API key is set as an environment variable"""
+    api_key = os.getenv("OPEN_AI_KEY")
+
+    response = requests.post(
+        url="https://api.openai.com/v1/chat/completions",
+        headers={"authorization": f"Bearer {api_key}"},
+        json={
+            "model": "gpt-3.5-turbo",
+            "messages": [{"role": "user", "content": prompt}],
+        },
+    )
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
