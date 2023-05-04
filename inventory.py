@@ -2,7 +2,7 @@ import datetime
 import pyperclip
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Label, Input, Button, RadioSet, DataTable, Footer, Static
 
@@ -119,7 +119,7 @@ class InventoryScreen(Screen):
     BINDINGS = [("escape", "app.pop_screen", "Return")]
 
     def compose(self) -> ComposeResult:
-        with Vertical():
+        with VerticalScroll():
             yield Static(
                 Text("Select cell to copy value", style="bold orange1"),
                 id="inv_copy_label",

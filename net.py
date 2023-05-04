@@ -6,7 +6,7 @@ from pathlib import Path
 import pyperclip
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Content, Container
+from textual.containers import VerticalScroll, Container
 from textual.widgets import Static, Input, Footer, Button, Tabs, Tab
 
 # from textual_autocomplete._autocomplete import AutoComplete, Dropdown
@@ -54,7 +54,7 @@ class NetTextorialApp(App):
             Button(label="Go!", variant="primary", id="run_button"),
             id="input_container",
         )
-        yield Content(
+        yield VerticalScroll(
             Tabs(
                 "Raw Output",
                 "Parsed Output",
