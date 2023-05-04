@@ -8,11 +8,12 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll, Container
 from textual.widgets import Static, Input, Footer, Button, Tabs, Tab
+from textual_autocomplete import AutoComplete, Dropdown
 
 # from textual_autocomplete._autocomplete import AutoComplete, Dropdown
 
 # local imports
-from helpers import ai_chat, get_device_info, add_node, write_json_file
+from helpers import ai_chat, get_device_info, add_node, get_items, write_json_file
 from inventory import InventorySidebar, InventoryScreen
 
 
@@ -47,9 +48,15 @@ class NetTextorialApp(App):
 
     def compose(self) -> ComposeResult:
         yield Container(
-            Input(
-                placeholder="Enter device hostname/IP and command: '<hostname/IP> show <command>'",
-                id="command_input",
+            AutoComplete(
+                Input(
+                    placeholder="Enter device hostname/IP and command: '<hostname/IP> show <command>'",
+                    id="command_input",
+                ),
+                Dropdown(
+                    items=get_items,  # Using a callback to dynamically generate items
+                    id="my-dropdown",
+                ),
             ),
             Button(label="Go!", variant="primary", id="run_button"),
             id="input_container",

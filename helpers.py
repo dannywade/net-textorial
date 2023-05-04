@@ -14,6 +14,7 @@ import pynautobot
 import requests
 from rich.text import Text
 from rich.tree import Tree
+from textual_autocomplete import DropdownItem, InputState
 
 # from textual_autocomplete._autocomplete import DropdownItem, InputState
 
@@ -51,7 +52,7 @@ def device_connection(host_id: str, credentials: dict) -> ConnectHandler:
     return connection
 
 
-def get_device_info(self, user_input) -> tuple:
+def get_device_info(user_input) -> tuple:
     """
     Allows user to run any CLI command and have the raw and parsed output returned.
     """
@@ -178,40 +179,40 @@ def sot_sync(url: str, token: str, source: str = None) -> bool:
 
 
 ### Disabled until textual autocomplete is compatible with Textual >=0.14.0 ###
-# def get_items(input_state: InputState) -> list[DropdownItem]:
-#     """Attempt to read local inventory file (JSON) and build list of DropdownItems to use for autocomplete
+def get_items(input_state: InputState) -> list[DropdownItem]:
+    """Attempt to read local inventory file (JSON) and build list of DropdownItems to use for autocomplete
 
-#     Args:
-#         value (str): Automatically received by Input widget included in the AutoComplete container
-#         cursor_position (int): Automatically received by Input widget included in the AutoComplete container
-#     """
+    Args:
+        value (str): Automatically received by Input widget included in the AutoComplete container
+        cursor_position (int): Automatically received by Input widget included in the AutoComplete container
+    """
 
-#     try:
-#         with open(f"./sot_inventory.json", "r") as f:
-#             nb_devices = json.load(f)
-#     except FileNotFoundError:
-#         return ""
+    try:
+        with open(f"./sot_inventory.json", "r") as f:
+            nb_devices = json.load(f)
+    except FileNotFoundError:
+        return ""
 
-#     items = []
+    items = []
 
-#     for dev in nb_devices:
-#         items.append(
-#             DropdownItem(
-#                 Text(dev.get("name")),  # 'main' column
-#                 Text(dev.get("primary_ip"), style="#a1a1a1"),
-#                 Text(dev.get("device_type"), style="#a1a1a1"),
-#             )
-#         )
+    for dev in nb_devices:
+        items.append(
+            DropdownItem(
+                Text(dev.get("name")),  # 'main' column
+                Text(dev.get("primary_ip"), style="#a1a1a1"),
+                Text(dev.get("device_type"), style="#a1a1a1"),
+            )
+        )
 
-#     # Only keep devices that contain the Input value as a substring
-#     matches = [c for c in items if input_state.value.lower() in c.main.plain.lower()]
+    # Only keep devices that contain the Input value as a substring
+    matches = [c for c in items if input_state.value.lower() in c.main.plain.lower()]
 
-#     # Favor items that start with the Input value, pull them to the top
-#     ordered = sorted(
-#         matches, key=lambda v: v.main.plain.startswith(input_state.value.lower())
-#     )
+    # Favor items that start with the Input value, pull them to the top
+    ordered = sorted(
+        matches, key=lambda v: v.main.plain.startswith(input_state.value.lower())
+    )
 
-#     return ordered
+    return ordered
 
 
 def get_device_count(url: str, token: str) -> int:
