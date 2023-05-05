@@ -16,8 +16,6 @@ from rich.text import Text
 from rich.tree import Tree
 from textual_autocomplete import DropdownItem, InputState
 
-# from textual_autocomplete._autocomplete import DropdownItem, InputState
-
 
 def device_connection(host_id: str, credentials: dict) -> ConnectHandler:
     """
@@ -337,21 +335,3 @@ def add_node(name: str, tree: Tree, data: list) -> str:
         tree.add(Text(f"{data}", style="bold gold1"))
 
     return tree
-
-
-def ai_chat(prompt: str) -> str:
-    """Ask ChatGPT a question. Assumes API key is set as an environment variable"""
-    api_key = os.getenv("OPEN_AI_KEY")
-
-    response = requests.post(
-        url="https://api.openai.com/v1/chat/completions",
-        headers={"authorization": f"Bearer {api_key}"},
-        json={
-            "model": "gpt-3.5-turbo",
-            "messages": [{"role": "user", "content": prompt}],
-        },
-    )
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None

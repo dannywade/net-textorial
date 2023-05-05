@@ -1,19 +1,23 @@
-import asyncio
 import json
+import os
+import requests
 from rich.syntax import Syntax
 from rich.tree import Tree
 from pathlib import Path
 import pyperclip
+from rich.text import Text
+from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll, Container
-from textual.widgets import Static, Input, Footer, Button, Tabs, Tab
+from textual.widgets import Static, Input, Footer, Button, Tabs
+from textual.worker import get_current_worker
 from textual_autocomplete import AutoComplete, Dropdown
 
 # from textual_autocomplete._autocomplete import AutoComplete, Dropdown
 
 # local imports
-from helpers import ai_chat, get_device_info, add_node, get_items, write_json_file
+from helpers import get_device_info, add_node, get_items, write_json_file
 from inventory import InventorySidebar, InventoryScreen
 
 
@@ -146,6 +150,10 @@ class NetTextorialApp(App):
             self.query_one("#output-results", Static).update(tree)
         # Learn with ChatGPT tab
         elif event.tab.id == "tab-4":
+            # Clear results box and provide useful feedback to user
+            self.query_one("#output-results", Static).update(
+                "Please wait... ChatGPT is analyzing the JSON payload."
+            )
             # Load the JSON file, if not already loaded
             try:
                 file_path = Path(__file__).parent / "parsed_output.json"
@@ -156,21 +164,37 @@ class NetTextorialApp(App):
                     "Local JSON file could not be loaded. Please ensure parsed output is available."
                 )
                 return
-            loop = asyncio.get_running_loop()
-            # Placeholder while ChatGPT loads answer
-            self.query_one("#output-results", Static).update(f"Waiting for ChatGPT...")
-            # Ask ChatGPT to explain the parsed output
-            result = await loop.run_in_executor(
-                None, ai_chat, f"Tell me about this JSON payload: {self.json_data}"
+            # Ask ChatGPT to analyze JSON
+            self.ai_chat(f"Tell me about this JSON payload: {self.json_data}")
+
+    @work(exclusive=True)
+    def ai_chat(self, prompt: str) -> str:
+        """Ask ChatGPT a question. Assumes API key is set as an environment variable"""
+        api_key = os.getenv("OPEN_AI_KEY")
+        worker = get_current_worker()
+        chatgpt_widget = self.query_one("#output-results", Static)
+
+        if prompt and api_key is not None:
+            response = requests.post(
+                url="https://api.openai.com/v1/chat/completions",
+                headers={"authorization": f"Bearer {api_key}"},
+                json={
+                    "model": "gpt-3.5-turbo",
+                    "messages": [{"role": "user", "content": prompt}],
+                },
             )
-            # Show ChatGPT results
-            if result:
-                self.query_one("#output-results", Static).update(
-                    f"ChatGPT response: \n\n{result['choices'][0]['message']['content']}"
-                )
-            else:
-                self.query_one("#output-results", Static).update(
-                    "ChatGPT is currently not responding..."
+            chatgpt_results = Text.from_ansi(
+                response.json()["choices"][0]["message"]["content"]
+            )
+            if not worker.is_cancelled:
+                # Update widget from thread
+                self.call_from_thread(chatgpt_widget.update, chatgpt_results)
+        else:
+            # No result from ChatGPT, return blank
+            if not worker.is_cancelled:
+                self.call_from_thread(
+                    chatgpt_widget.update,
+                    "Sorry, no OpenAI API key was found. Please make sure to set an environment variable.",
                 )
 
 
