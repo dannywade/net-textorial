@@ -5,9 +5,9 @@ Screen {
     layers: base filters;
 }
 
-/* Dropdown { 
+Dropdown { 
     max-width: 50;
-} */
+}
 
 #input_container {
     layout: horizontal;
