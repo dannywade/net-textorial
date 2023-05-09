@@ -60,6 +60,16 @@ Any device that is supported by Netmiko can be used with this tool. Under the ho
 
 With Genie and ntc-templates (TextFSM) being the two major parsing libraries in the game, there's a goal to support both libraries. Currently, only ntc-templates is supported and used to parse all command output. Genie parsers will be supported in the future.
 
+### ChatGPT Integration (optional)
+
+If you would like the assistance of ChatGPT to help explain the parsed output, there's an optional integration using [OpenAI's API](https://openai.com/blog/openai-api). All you need to do is set your OpenAI API token as an environment variable and net-textorial will ask ChatGPT to explain the parsed output.
+
+```shell
+    OPEN_AI_KEY=<your token>
+```
+
+***DISCLAIMER: Please make your own interpretation of the ChatGPT results. The results may differ. For more information, reference OpenAI's [terms of use](https://openai.com/policies/terms-of-use).***
+
 ## Demo
 
 https://user-images.githubusercontent.com/13680237/199552401-9e9c58b0-6cd9-4dcb-8512-b91cc8d010b0.mov

@@ -117,10 +117,16 @@ class NetTextorialApp(App):
             )
         # Parsed Output tab
         elif event.tab.id == "tab-2":
-            # Load the JSON file
-            file_path = Path(__file__).parent / "parsed_output.json"
-            with open(file_path) as parsed_data:
-                self.parsed_output = json.load(parsed_data)
+            try:
+                # Load the JSON file
+                file_path = Path(__file__).parent / "parsed_output.json"
+                with open(file_path) as parsed_data:
+                    self.parsed_output = json.load(parsed_data)
+            except:
+                self.query_one("#output-results", Static).update(
+                    "Local JSON file could not be loaded. Please ensure parsed output is available."
+                )
+                return
             # Convert loaded JSON to string for display
             parsed_jstring = json.dumps(self.parsed_output, indent=2)
             self.query_one("#output-results", Static).update(
