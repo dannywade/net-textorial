@@ -7,7 +7,6 @@ With recent changes, it has evolved into a learning tool that shows network engi
 
 Under the hood, this tool is leveraging [Netmiko](https://github.com/ktbyers/netmiko) and [Streamlit](hhttps://streamlit.io/). Thank you to all involved!
 
-If you'd like an overview of the tool, check out my [YouTube video](https://youtu.be/H8uGOIK2ZqY)!
 
 ## Features
 - **It just works**: Set your device CLI credentials as environment variables and let it rip! No need to define a device type! All device types are automagically determined using Netmiko's awesome `ssh_autodetect` module.
