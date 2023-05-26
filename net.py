@@ -32,7 +32,7 @@ if run:
 
     with tab3:
         df = pd.read_json(parsed_output)
-        st.header("Parsed Output")
+        st.header("Table")
         if parsed_output:
             st.dataframe(df, use_container_width=True, height=1000)
 else:
