@@ -38,7 +38,8 @@ pip3 install -r requirements.txt
     ```
 3. Enter the hostname/IP of the device and a valid 'show' command, hit enter or clock 'Run'
 
-    ![](screenshot-1.png)
+    ![Screenshot-1](https://github.com/netbell/net-streamtorial/assets/47117028/7177a5df-5de0-4a61-9427-f8472bfacc24)
+
 
 ## Supported Devices/Parsers
 
@@ -59,5 +60,6 @@ With Genie and ntc-templates (TextFSM) being the two major parsing libraries in 
 
 ## Demo
 
+https://github.com/netbell/net-streamtorial/assets/47117028/4927f098-e418-4ea0-b1ed-45942538977d
 
 
