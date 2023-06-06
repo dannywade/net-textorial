@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+netmiko = "==4.2.0"
+ntc-templates = "==3.2.0"
+streamlit = "==1.22.0"
+pandas = "==2.0.1"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
