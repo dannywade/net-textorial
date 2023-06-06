@@ -13,31 +13,31 @@ class NetworkDevice:
     def __init__(self, host_id: str, credentials: dict, device_type: str):
         self.host_id = host_id
         self.credentials = credentials
-        self.device_type = device_type  # device type is set here
+        self.device_type = device_type
         self.connection = None
 
     def device_connection(self):
         remote_device = {
             "device_type": self.device_type,
             "host": self.host_id,
-            "username": self.credentials.get("username"),
-            "password": self.credentials.get("password"),
+            "username": self.credentials.get("Username"),
+            "password": self.credentials.get("Password"),
         }
         if self.device_type == "autodetect":
             try:
                 guesser = SSHDetect(**remote_device)
                 best_match = guesser.autodetect()
                 remote_device["device_type"] = best_match
-            except NetmikoTimeoutException:
-                st.exception("The connection to the device timed out.")
+            except NetmikoTimeoutException as e:
+                st.exception(e)
                 self.connection = None
             except NetmikoAuthenticationException as e:
                 st.exception(e)
                 self.connection = None
         try:
             self.connection = ConnectHandler(**remote_device)
-        except NetmikoTimeoutException:
-            st.exception("The connection to the device timed out.")
+        except NetmikoTimeoutException as e:
+            st.exception(e)
             self.connection = None
         except NetmikoAuthenticationException as e:
             st.exception(e)
